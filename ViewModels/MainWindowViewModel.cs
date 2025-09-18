@@ -18,25 +18,6 @@ namespace WSCADViewer.ViewModels
     public class MainWindowViewModel : INotifyPropertyChanged
     {
         private string _message = "Hello, World!";
-        public event EventHandler<Rect>? BoundingBoxChanged;
-
-        public ObservableCollection<Shape?> RenderedShapes { get; } = new ObservableCollection<Shape?>();
-        public List<IPrimitive> Primitives { get; set; } = new List<IPrimitive>();
-        private TransformGroup _renderTransform;
-        public TransformGroup RenderTransform
-        {
-            get => _renderTransform;
-            set
-            {
-                if (_renderTransform != value)
-                {
-                    _renderTransform = value;
-                    OnPropertyChanged(nameof(RenderTransform));
-                }
-            }
-        }
-        //public Transform RenderTransformFlipY { get; } = new ScaleTransform(1, -1);
-
         public string Message
         {
             get => _message;
@@ -50,9 +31,25 @@ namespace WSCADViewer.ViewModels
             }
         }
 
-        public ICommand LoadFileCommand { get; }
-        public ICommand ClickCanvasCommand { get; }
+        public ObservableCollection<Shape?> RenderedShapes { get; } = new ObservableCollection<Shape?>();
+        public List<IPrimitive> Primitives { get; set; } = new List<IPrimitive>();
+        private TransformGroup _renderTransform = new();
+        public TransformGroup RenderTransform
+        {
+            get => _renderTransform;
+            set
+            {
+                if (_renderTransform != value)
+                {
+                    _renderTransform = value;
+                    OnPropertyChanged(nameof(RenderTransform));
+                }
+            }
+        }
 
+        public ICommand LoadFileCommand { get; }
+
+        public event EventHandler<Rect>? BoundingBoxChanged;
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -63,32 +60,33 @@ namespace WSCADViewer.ViewModels
         {
             var openFileDialog = new OpenFileDialog
             {
-                Filter = "JSON Files (*.json)|*.json|XML Files(*.xml)|*.xml|All Files (*.*)|*.*",
+                Filter = "All supported Files (*.json, *.xml)|*.json;*.xml|JSON Files (*.json)|*.json|XML Files (*.xml)|*.xml|All Files (*.*)|*.*",
                 Title = "Select a Shapes File"
             };
-            if (openFileDialog.ShowDialog() == true)
+            if (openFileDialog.ShowDialog() != true) return;
+            try
             {
-                try
+                using var stream = openFileDialog.OpenFile();
+                var loader = PrimitiveLoaderFactory.Create(System.IO.Path.GetExtension(openFileDialog.FileName));
+
+                // must convert to list to access primitives later, e.g. for inspection
+                var shapes = loader.LoadPrimitives(stream).ToList();
+                Primitives = shapes;
+
+                RenderedShapes.Clear();
+                Rect boundingBox = Rect.Empty;
+                foreach (var shape in shapes)
                 {
-                    using var stream = openFileDialog.OpenFile();
-                    var loader = PrimitiveLoaderFactory.Create(System.IO.Path.GetExtension(openFileDialog.FileName));
-                    var shapes = loader.LoadPrimitives(stream).ToList();  // must convert to list to access primitives later, e.g. for inspection
-                    Primitives = shapes;
-                    RenderedShapes.Clear();
-                    Rect boundingBox = Rect.Empty;
-                    foreach (var shape in shapes)
-                    {
-                        boundingBox = AddBoundingBoxes(boundingBox, shape.BoundingBox());
-                        RenderedShapes.Add(shape.ToWpfShape());
-                    }
-                    BoundingBoxChanged?.Invoke(this, boundingBox);
-                    Message = $"Loaded {RenderedShapes.Count} shapes from {openFileDialog.FileName}";
+                    boundingBox = AddBoundingBoxes(boundingBox, shape.BoundingBox());
+                    RenderedShapes.Add(shape.ToWpfShape());
                 }
-                catch (Exception ex)
-                {
-                    Message = $"Error loading file: {ex.Message}";
-                    Debug.WriteLine(Message);
-                }
+                BoundingBoxChanged?.Invoke(this, boundingBox);
+                Message = $"Loaded {RenderedShapes.Count} shapes from {openFileDialog.FileName}";
+            }
+            catch (Exception ex)
+            {
+                Message = $"Error loading file: {ex.Message}";
+                Debug.WriteLine(Message);
             }
         }
 
@@ -112,16 +110,6 @@ namespace WSCADViewer.ViewModels
         public MainWindowViewModel()
         {
             LoadFileCommand = new RelayCommand(OnLoadFile);
-            ClickCanvasCommand = new RelayCommand(OnClickCanvas);
-            _renderTransform = new TransformGroup();
-            _renderTransform.Children.Add(new ScaleTransform(1, -1));
-            _renderTransform.Children.Add(new TranslateTransform(50, 50));
-            var myLineModel = new LineShape(a: new Point(0, 0), b: new Point(150, 0), color: Colors.Goldenrod);
-            var myVertLineModel = new LineShape(a: new Point(0, 0), b: new Point(0, 150), color: Colors.Goldenrod);
-            var myCircleModel = new CircleShape(center: new Point(200, 200), radius: 50, color: Colors.Red, filled: true);
-            RenderedShapes.Add(myCircleModel.ToWpfShape());
-            RenderedShapes.Add(myLineModel.ToWpfShape());
-            RenderedShapes.Add(myVertLineModel.ToWpfShape());
         }
     }
 
