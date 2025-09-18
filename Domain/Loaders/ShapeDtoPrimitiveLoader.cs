@@ -16,29 +16,11 @@ namespace WSCADViewer.Domain.Loaders
             _dtoLoader = dtoLoader;
         }
 
-        //public IEnumerable<IPrimitive> LoadPrimitives(Stream input)
-        //{
-        //    foreach (var dto in _dtoLoader.Load(input))
-        //    {
-        //        yield return PrimitiveRegistry.Create(dto);
-        //    }
-        //}
-
         public IEnumerable<IPrimitive> LoadPrimitives(Stream input)
         {
             foreach (var dto in _dtoLoader.Load(input))
             {
-                IPrimitive primitive;
-                try
-                {
-                    primitive = PrimitiveRegistry.Create(dto);
-                }
-                catch (NotSupportedException)
-                {
-                    Debug.WriteLine($"WARNING: Unsupported shape type: {dto.Type}, skipping.");
-                    continue;
-                }
-                yield return primitive;
+                yield return PrimitiveRegistry.Create(dto);
             }
         }
 
@@ -46,11 +28,6 @@ namespace WSCADViewer.Domain.Loaders
         //{
         //    foreach (var dto in _dtoLoader.Load(input))
         //    {
-        //        Debug.WriteLine($"Processing DTO {dto.Type}:");
-        //        foreach (var pair in dto.Attributes)
-        //        {
-        //            Debug.WriteLine($"\tKey: {pair.Key}, Value: {pair.Value}");
-        //        }
         //        IPrimitive primitive;
         //        try
         //        {
@@ -58,12 +35,11 @@ namespace WSCADViewer.Domain.Loaders
         //        }
         //        catch (NotSupportedException)
         //        {
+        //            Debug.WriteLine($"WARNING: Unsupported shape type: {dto.Type}, skipping.");
         //            continue;
         //        }
-        //        Debug.WriteLine($"Loaded primitive of type {dto.Type}, with bounding box {primitive.BoundingBox()}");
         //        yield return primitive;
         //    }
         //}
-
     }
 }
