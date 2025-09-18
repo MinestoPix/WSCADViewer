@@ -1,0 +1,62 @@
+﻿<Window x:Class="WSCADViewer.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WSCADViewer"
+        xmlns:viewmodels="clr-namespace:WSCADViewer.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:MainWindowViewModel}"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- For button and message -->
+            <RowDefinition Height="*"/>  <!-- For canvas -->
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10">
+            <Button Content="Select Shapes File" Command="{Binding LoadFileCommand}" Width="100" Margin="0,0,10,0"/>
+            <TextBlock Text="{Binding Message}" FontSize="16"/>
+        </StackPanel>
+
+        <Border BorderBrush="Red" BorderThickness="1" Grid.Row="1" Grid.Column="0" Margin="10">
+            <!--<Viewbox Stretch="Uniform">-->
+                <!-- Auto-scales to fit window, preserves aspect. -->
+                <Canvas x:Name="renderCanvas"
+                        RenderTransform="{Binding RenderTransform}">
+                    <ItemsControl ItemsSource="{Binding RenderedShapes}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Canvas />
+                                <!-- Shapes positioned absolutely. -->
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </Canvas>
+            <!--</Viewbox>-->
+        </Border>
+    </Grid>
+
+    <!--<StackPanel HorizontalAlignment="Center" VerticalAlignment="Top">
+        <TextBlock
+            Text="{Binding Message}"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            FontSize="16">
+        </TextBlock>
+        <Button
+            Command="{Binding LoadFileCommand}"
+            Width="150"
+            Height="40">
+            Select Shapes File
+        </Button>
+        <Canvas>
+            <ItemsControl ItemsSource="{Binding RenderedShapes}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Canvas />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </Canvas>
+    </StackPanel>-->
+</Window>
