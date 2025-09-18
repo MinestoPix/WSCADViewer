@@ -6,11 +6,12 @@ namespace WSCADViewer.Domain.Loaders
     {
         public static IPrimitiveLoader Create(string fileExtension)
         {
-            return fileExtension.ToLower() switch
+            return new ShapeDtoPrimitiveLoader(fileExtension.ToLower() switch
             {
-                ".json" => new ShapeDtoPrimitiveLoader(new JsonShapeDtoLoader()),
+                ".json" => new JsonShapeDtoLoader(),
+                ".xml" => new XmlShapeDtoLoader(),
                 _ => throw new NotSupportedException($"File extension '{fileExtension}' is not supported."),
-            };
+            });
         }
     }
 }
